@@ -37,7 +37,6 @@ pipeline {
                 docker run -d \
                   --name $CONTAINER_NAME \
                   --network nginx-network \
-                  -p $APP_PORT:$APP_PORT \
                   --restart unless-stopped \
                   $IMAGE_NAME
 
