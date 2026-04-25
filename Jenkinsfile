@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'zoople-devops-workshop-vijin:latest'
-        CONTAINER_NAME = 'sreehari'
+        CONTAINER_NAME = 'sreeharirmohan'
         APP_PORT = '3000'
         DOMAIN = 'vijin.workshop.zoople.in'
         NGINX_DIR = '/home/ubuntu/nginx'
