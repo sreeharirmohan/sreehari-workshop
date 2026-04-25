@@ -6,7 +6,7 @@ pipeline {
         CONTAINER_NAME = 'vijin-app'
         APP_PORT = '3000'
         DOMAIN = 'workshop.zoople.in'
-        NGINX_DIR = '/home/ubuntu/nginx'
+        NGINX_DIR = '/var/lib/jenkins/nginx'
     }
 
     stages {
@@ -19,6 +19,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
+                set -ex
                 docker build -t $IMAGE_NAME .
                 '''
             }
@@ -27,6 +28,8 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 sh '''
+                set -ex
+
                 docker rm -f $CONTAINER_NAME || true
 
                 docker network inspect nginx-network >/dev/null 2>&1 || docker network create nginx-network
@@ -37,6 +40,8 @@ pipeline {
                   -p $APP_PORT:$APP_PORT \
                   --restart unless-stopped \
                   $IMAGE_NAME
+
+                docker ps | grep $CONTAINER_NAME
                 '''
             }
         }
@@ -44,14 +49,29 @@ pipeline {
         stage('Setup Nginx') {
             steps {
                 sh '''
-                echo "Current user:"
-                whoami
+                set -ex
 
-                echo "Checking nginx directory..."
-                sudo test -d $NGINX_DIR
+                echo "Current user: $(whoami)"
+                echo "Current path: $(pwd)"
+                echo "Home path: $HOME"
 
-                echo "Running nginx script..."
-                sudo bash -c "cd $NGINX_DIR && chmod +x nginx.sh && ./nginx.sh $DOMAIN $CONTAINER_NAME $APP_PORT"
+                echo "Checking nginx path: $NGINX_DIR"
+
+                if [ ! -d "$NGINX_DIR" ]; then
+                  echo "ERROR: $NGINX_DIR does not exist"
+                  echo "Copy nginx folder once using:"
+                  echo "sudo cp -r /home/ubuntu/nginx /var/lib/jenkins/nginx"
+                  echo "sudo chown -R jenkins:jenkins /var/lib/jenkins/nginx"
+                  exit 1
+                fi
+
+                ls -la "$NGINX_DIR"
+
+                cd "$NGINX_DIR"
+
+                chmod +x nginx.sh
+
+                ./nginx.sh "$DOMAIN" "$CONTAINER_NAME" "$APP_PORT"
                 '''
             }
         }
